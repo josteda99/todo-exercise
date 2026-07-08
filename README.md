@@ -17,6 +17,7 @@ min requirements
 - fix bugs
 - use RxJS
 - implement persistance with firestore
+- infinite scroll
 
 - exhaust manual testing
 - show all categories with chips???

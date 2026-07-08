@@ -4,7 +4,9 @@ export const routes: Routes = [
   {
     path: 'task-list',
     loadComponent: () =>
-      import('./features/task-list/task-list.page').then((m) => m.TaskListPage),
+      import('./features/todo-task/pages/task-list/task-list.page').then(
+        (m) => m.TaskListPage,
+      ),
   },
   {
     path: '',

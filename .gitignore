@@ -68,3 +68,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+
+#project
+/ios/App/App/GoogleService-Info.plist
+/android/app/google-services.json
+/www
