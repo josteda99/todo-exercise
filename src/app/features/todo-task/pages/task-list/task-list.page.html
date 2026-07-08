@@ -53,7 +53,60 @@
             <ion-icon slot="icon-only" name="add-outline"></ion-icon>
           </ion-button>
         </ion-item>
-        @for (item of pendingTasks(); track item.id) {
+        @if (pendingTasks().length) { @for (item of pendingTasks(); track
+        item.id) {
+        <ion-item (click)="editTaskDialog(item)">
+          <ion-checkbox
+            slot="start"
+            [checked]="item.completed"
+            (ionChange)="toggleTask($event, item.id)"
+            (click)="$event.stopPropagation()"
+          ></ion-checkbox>
+          <ion-label
+            class="ion-text-nowrap"
+            [style.text-decoration]="item.completed ? 'line-through' : 'none'"
+          >
+            {{ item.title }}
+          </ion-label>
+          <ion-chip
+            [color]="!item.category ? 'primary' : 'success'"
+            outline="true"
+            clickable="true"
+            (click)="
+                    openAssignCategoryModal(item.id); $event.stopPropagation()
+                  "
+          >
+            <ion-label>{{ item.category || "Assign" }}</ion-label>
+          </ion-chip>
+          <ion-button
+            fill="clear"
+            slot="end"
+            (click)="deleteTask($event, item.id)"
+            ><ion-icon name="trash-outline" color="danger"></ion-icon
+          ></ion-button>
+        </ion-item>
+        } } @else {
+        <ion-item>
+          <ion-label> No items added yet </ion-label>
+        </ion-item>
+        }
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- completed task card -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Completed • {{ completedTasks().length }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      @if (completedTasks().length === 0) {
+      <ion-item>
+        <ion-label> No completed items </ion-label>
+      </ion-item>
+      } @else {
+      <ion-list>
+        @for (item of displayedCompletedTasks(); track item.id) {
         <ion-item (click)="editTaskDialog(item)">
           <ion-checkbox
             slot="start"
@@ -84,59 +137,20 @@
             ><ion-icon name="trash-outline" color="danger"></ion-icon
           ></ion-button>
         </ion-item>
-        } @empty {
-        <ion-item>
-          <ion-label> No items added yet </ion-label>
-        </ion-item>
         }
       </ion-list>
-    </ion-card-content>
-  </ion-card>
 
-  <!-- completed task card -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Completed • {{ completedTasks().length }}</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-list>
-        @for (item of completedTasks(); track item.id) {
-        <ion-item (click)="editTaskDialog(item)">
-          <ion-checkbox
-            slot="start"
-            [checked]="item.completed"
-            (ionChange)="toggleTask($event, item.id)"
-            (click)="$event.stopPropagation()"
-          ></ion-checkbox>
-          <ion-label
-            class="ion-text-nowrap"
-            [style.text-decoration]="item.completed ? 'line-through' : 'none'"
-          >
-            {{ item.title }}
-          </ion-label>
-          <ion-chip
-            [color]="!item.category ? 'primary' : 'success'"
-            outline="true"
-            clickable="true"
-            (click)="
-                openAssignCategoryModal(item.id); $event.stopPropagation()
-              "
-          >
-            <ion-label>{{ item.category || "Assign" }}</ion-label>
-          </ion-chip>
-          <ion-button
-            fill="clear"
-            slot="end"
-            (click)="deleteTask($event, item.id)"
-            ><ion-icon name="trash-outline" color="danger"></ion-icon
-          ></ion-button>
-        </ion-item>
-        } @empty {
-        <ion-item>
-          <ion-label> No completed items </ion-label>
-        </ion-item>
-        }
-      </ion-list>
+      <ion-infinite-scroll
+        threshold="100px"
+        (ionInfinite)="loadMoreCompleted($event)"
+        #completedInfinite
+      >
+        <ion-infinite-scroll-content
+          loadingSpinner="bubbles"
+          loadingText="Loading more completed tasks..."
+        ></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+      }
     </ion-card-content>
   </ion-card>
 
@@ -178,11 +192,12 @@
                 "
                 placeholder="Select categories"
               >
-                @for (category of allCategories(); track category) {
+                @if (allCategories().length) { @for (category of
+                allCategories(); track category) {
                 <ion-select-option [value]="category"
                   >{{ category }}</ion-select-option
                 >
-                } @empty {
+                } } @else {
                 <ion-select-option disabled>No categories</ion-select-option>
                 }
               </ion-select>
@@ -202,7 +217,8 @@
             <ion-card-title>Create Categories</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            @for (item of allCategories(); track $index) {
+            @if (allCategories().length) { @for (item of allCategories(); track
+            item) {
             <ion-item (click)="editCategoryDialog(item)">
               <ion-label class="ion-text-wrap"> {{ item }} </ion-label>
               <ion-button
@@ -212,7 +228,7 @@
                 ><ion-icon name="trash-outline" color="danger"></ion-icon
               ></ion-button>
             </ion-item>
-            } @empty {
+            } } @else {
             <ion-item>
               <ion-label> No categories added yet </ion-label>
             </ion-item>
@@ -266,11 +282,12 @@
                 "
                 placeholder="Select a category"
               >
-                @for (category of allCategories(); track category) {
+                @if (allCategories().length) { @for (category of
+                allCategories(); track category) {
                 <ion-select-option [value]="category"
                   >{{ category }}</ion-select-option
                 >
-                } @empty {
+                } } @else {
                 <ion-select-option disabled>No categories</ion-select-option>
                 }
               </ion-select>

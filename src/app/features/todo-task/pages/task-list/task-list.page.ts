@@ -1,4 +1,5 @@
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, inject, signal, ViewChild, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   IonInputCustomEvent,
   InputInputEventDetail,
@@ -27,6 +28,8 @@ import {
   IonText,
   AlertController,
   IonModal,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   IonSelect,
   IonSelectOption,
 } from '@ionic/angular/standalone';
@@ -68,6 +71,9 @@ import { OverlayEventDetail } from '@ionic/core/components';
     IonToolbar,
     IonTitle,
     IonContent,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
+    CommonModule,
     IonSelect,
     IonSelectOption,
   ],
@@ -76,6 +82,7 @@ import { OverlayEventDetail } from '@ionic/core/components';
 export class TaskListPage {
   @ViewChild('createCategoryModal') createCategoryModal!: IonModal;
   @ViewChild('assignCategoryModal') assignCategoryModal!: IonModal;
+  @ViewChild('completedInfinite') completedInfinite!: IonInfiniteScroll;
 
   private readonly _store = inject(TodoTaskStore);
   private alertController = inject(AlertController);
@@ -89,6 +96,10 @@ export class TaskListPage {
   public allCategories = this._store.allCategories;
   public categoryFilter = this._store.categoryFilter;
   public selectedAssignCategory = this._store.selectedAssignCategory;
+  public completedDisplayLimit = signal(20);
+  public displayedCompletedTasks = computed(() =>
+    this.completedTasks().slice(0, this.completedDisplayLimit()),
+  );
 
   constructor() {
     addIcons({
@@ -265,6 +276,31 @@ export class TaskListPage {
     $event: IonInputCustomEvent<InputInputEventDetail>,
   ) {
     this.newCategory.set($event.detail.value || '');
+  }
+
+  public loadMoreCompleted(event: any) {
+    const increment = 10;
+    const current = this.completedDisplayLimit();
+    const total = this.completedTasks().length;
+    this.completedDisplayLimit.set(Math.min(current + increment, total));
+
+    try {
+      event.target.complete();
+    } catch (e) {
+      // ignore
+    }
+
+    if (this.completedDisplayLimit() >= total) {
+      try {
+        event.target.disabled = true;
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
+  public trackById(_: number, item: TodoTask) {
+    return item.id;
   }
 
   public unassignCategoryFromTask() {
