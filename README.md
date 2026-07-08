@@ -2,26 +2,21 @@
 
 min requirements
 
-- Implement small store with Ngrx and signals
-- Create task
-- Edit task
-- Delete task
-- Check/Uncheck task
+- Implement small store with Ngrx and signals✔️
+- Create task✔️
+- Edit task✔️
+- Delete task✔️
+- Check/Uncheck task✔️
 - Create category
 - Edit category
 - Delete category
 - Filter by category
 - Add category in task
-- fix checkbox cateogry issue
-- improve layout
-- fix bugs
-- use RxJS
 - implement persistance with firestore
 - infinite scroll
 
 - exhaust manual testing
 - show all categories with chips???
-- improve layout v2
 
 - Compile android and ios with cordoba
 

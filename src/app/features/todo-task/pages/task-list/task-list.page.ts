@@ -89,7 +89,6 @@ export class TaskListPage {
           const value = input.taskTitle;
           if (!value) return;
           this._store.editTask(value);
-          // this.taskService.editTask(this.tempTaskId()!, value, '');
         },
       },
     ];
