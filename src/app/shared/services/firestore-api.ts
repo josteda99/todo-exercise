@@ -8,8 +8,10 @@ import {
   setDoc,
   updateDoc,
   collectionData,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from '@angular/fire/firestore';
-import { getDocs } from 'firebase/firestore';
+import { getDocs, query, where } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -69,7 +71,23 @@ export class FirestoreApi {
     return this.docFn(this.firestore, path);
   }
 
+  public async getDocByField(
+    path: string,
+    field: string,
+    value: string,
+  ): Promise<QueryDocumentSnapshot<unknown, DocumentData> | null> {
+    const collectionRef = this.collectionFn(path);
+    const q = query(collectionRef, where(field, '==', value));
+    const snapshot = await this.getDocsFn(q);
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    return doc;
+  }
+
   public updateDocFromCollection(docRef: any, data: any) {
-    return this.updateDocFn(docRef, data);
+    const resolvedDocRef = docRef?.ref ?? docRef;
+    return this.updateDocFn(resolvedDocRef, data);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import {
   IonInputCustomEvent,
   InputInputEventDetail,
@@ -26,17 +26,29 @@ import {
   IonButtons,
   IonText,
   AlertController,
+  IonModal,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { TodoTask } from '../../interfaces/task.interface';
-import { addOutline, trashOutline } from 'ionicons/icons';
+import {
+  addOutline,
+  closeOutline,
+  filterOutline,
+  optionsOutline,
+  trashOutline,
+} from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { TodoTaskStore } from '../../store/task.store';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { OverlayEventDetail } from '@ionic/core/components';
+
 @Component({
   selector: 'app-task-list',
   templateUrl: 'task-list.page.html',
   styleUrls: ['task-list.page.scss'],
   imports: [
+    IonModal,
     IonText,
     IonButtons,
     IonProgressBar,
@@ -56,24 +68,41 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     IonToolbar,
     IonTitle,
     IonContent,
+    IonSelect,
+    IonSelectOption,
   ],
   providers: [TodoTaskStore],
 })
 export class TaskListPage {
+  @ViewChild('createCategoryModal') createCategoryModal!: IonModal;
+  @ViewChild('assignCategoryModal') assignCategoryModal!: IonModal;
+
   private readonly _store = inject(TodoTaskStore);
   private alertController = inject(AlertController);
 
   public newTask = signal('');
+  public newCategory = signal('');
   public pendingTasks = this._store.pendingTasks;
   public completedTasks = this._store.completedTasks;
   public allTasks = this._store.allTasks;
+  public selectedCategoriesFilter = this._store.selectedCategoriesFilter;
+  public allCategories = this._store.allCategories;
+  public categoryFilter = this._store.categoryFilter;
+  public selectedAssignCategory = this._store.selectedAssignCategory;
 
   constructor() {
-    addIcons({ trashOutline, addOutline });
+    addIcons({
+      trashOutline,
+      addOutline,
+      optionsOutline,
+      closeOutline,
+      filterOutline,
+    });
+    this._store.loadTasks().pipe(takeUntilDestroyed()).subscribe();
     this._store
-      .loadTasks()
+      .loadCategories()
       .pipe(takeUntilDestroyed())
-      .subscribe((a) => console.log(a));
+      .subscribe(console.log);
   }
 
   private getTaskDialogButtons() {
@@ -109,15 +138,44 @@ export class TaskListPage {
     ];
   }
 
+  private getCategoryDialogButtons() {
+    return [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+      {
+        text: 'Edit',
+        role: 'confirm',
+        handler: (input: { categoryName: string }) => {
+          const value = input.categoryName;
+          if (!value) return;
+          this._store.editCategory(value);
+        },
+      },
+    ];
+  }
+
+  private getCreateCategoryInputs(): AlertInput[] {
+    return [
+      {
+        name: 'categoryName',
+        type: 'text',
+        value: this._store.tempCategory() || '',
+        placeholder: 'New category',
+        attributes: {
+          maxlength: 50,
+          minlength: 1,
+        },
+      },
+    ];
+  }
+
   public addTask() {
     if (!this.newTask().trim()) return;
 
     this._store.createTask(this.newTask());
     this.newTask.set('');
-  }
-
-  public onNewTaskInput($event: IonInputCustomEvent<InputInputEventDetail>) {
-    this.newTask.set($event.detail.value || '');
   }
 
   public deleteTask(e: Event, id: string) {
@@ -144,6 +202,83 @@ export class TaskListPage {
   }
 
   public openAssignCategoryModal(taskId: string) {
-    //todo
+    this._store.selectTaskToEdit(taskId);
+    const task = this._store.selectedTask();
+    this._store.changeSelectedAssignCategory(task?.category || null);
+    this.assignCategoryModal.present();
+  }
+
+  public onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
+    if (event.detail.role === 'confirm') {
+      this._store.setCategoryFilter();
+    }
+  }
+
+  public changeSelectedCategoriesFilter(value: string[]) {
+    this._store.changeSelectedCategoriesFilter(value);
+  }
+
+  public clearCategoryFilter() {
+    this._store.clearCategoryFilter();
+  }
+
+  public changeSelectedAssignCategoryFilter(value: string) {
+    this._store.changeSelectedAssignCategory(value);
+  }
+
+  public cancel() {
+    this.createCategoryModal.dismiss(null, 'cancel');
+    this.assignCategoryModal.dismiss(null, 'cancel');
+    this.changeSelectedCategoriesFilter([]);
+  }
+
+  public confirm() {
+    this.createCategoryModal.dismiss('', 'confirm');
+    this.assignCategoryModal.dismiss('', 'confirm');
+  }
+
+  async editCategoryDialog(category: string) {
+    if (category) {
+      this._store.changeTempCategory(category);
+    }
+    const alert = await this.alertController.create({
+      header: 'Edit Category',
+      buttons: this.getCategoryDialogButtons(),
+      inputs: this.getCreateCategoryInputs(),
+    });
+
+    await alert.present();
+  }
+
+  public addCategory() {
+    if (!this.newCategory().trim()) return;
+
+    this._store.addCategory(this.newCategory());
+    this.newCategory.set('');
+  }
+
+  public onNewTaskInput($event: IonInputCustomEvent<InputInputEventDetail>) {
+    this.newTask.set($event.detail.value || '');
+  }
+
+  public onNewCategoryInput(
+    $event: IonInputCustomEvent<InputInputEventDetail>,
+  ) {
+    this.newCategory.set($event.detail.value || '');
+  }
+
+  public unassignCategoryFromTask() {
+    this._store.removeCategoryFromTask();
+    this.assignCategoryModal.dismiss();
+  }
+
+  public applyAssignCategory() {
+    this._store.assignTaskCategory();
+    this.assignCategoryModal.dismiss();
+  }
+
+  deleteCategory(e: PointerEvent, category: string) {
+    e.stopPropagation();
+    this._store.deleteCategory(category);
   }
 }

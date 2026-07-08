@@ -16,6 +16,22 @@
         "
       ></ion-progress-bar>
     </ion-toolbar>
+    <ion-item>
+      <ion-button
+        id="categories-creation"
+        [fill]="categoryFilter().length > 0 ? 'solid' : 'outline'"
+        color="primary"
+      >
+        <ion-label>Categories</ion-label>
+        <ion-icon slot="start" name="options-outline"></ion-icon>
+      </ion-button>
+      @if (categoryFilter().length > 0) {
+      <ion-button (click)="clearCategoryFilter()">
+        <ion-label>Clear filters</ion-label>
+        <ion-icon slot="start" name="filter-outline"></ion-icon>
+      </ion-button>
+      }
+    </ion-item>
   </ion-header>
 
   <!-- pending task card -->
@@ -123,4 +139,152 @@
       </ion-list>
     </ion-card-content>
   </ion-card>
+
+  <!-- create category modal -->
+  <ion-modal
+    #createCategoryModal
+    trigger="categories-creation"
+    (willDismiss)="onWillDismiss($event)"
+  >
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Categories</ion-title>
+          <ion-buttons slot="start">
+            <ion-button (click)="cancel()">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+          <ion-buttons slot="end">
+            <ion-button (click)="clearCategoryFilter()" [strong]="true"
+              >Clear</ion-button
+            >
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Filter Categories</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item>
+              <ion-select
+                interface="popover"
+                multiple
+                [value]="selectedCategoriesFilter()"
+                (ionChange)="
+                  changeSelectedCategoriesFilter($event.detail.value)
+                "
+                placeholder="Select categories"
+              >
+                @for (category of allCategories(); track category) {
+                <ion-select-option [value]="category"
+                  >{{ category }}</ion-select-option
+                >
+                } @empty {
+                <ion-select-option disabled>No categories</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
+            <ion-button
+              class="ion-margin-top"
+              expand="block"
+              (click)="confirm()"
+            >
+              Apply
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Create Categories</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            @for (item of allCategories(); track $index) {
+            <ion-item (click)="editCategoryDialog(item)">
+              <ion-label class="ion-text-wrap"> {{ item }} </ion-label>
+              <ion-button
+                fill="clear"
+                slot="end"
+                (click)="deleteCategory($event, item)"
+                ><ion-icon name="trash-outline" color="danger"></ion-icon
+              ></ion-button>
+            </ion-item>
+            } @empty {
+            <ion-item>
+              <ion-label> No categories added yet </ion-label>
+            </ion-item>
+            }
+            <ion-item>
+              <ion-input
+                name="newCategory"
+                [value]="newCategory()"
+                (ionInput)="onNewCategoryInput($event)"
+                placeholder="New category"
+                (keyup.enter)="addCategory()"
+              ></ion-input>
+              <ion-button (click)="addCategory()" shape="round" color="primary">
+                <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- assign category modal -->
+  <ion-modal #assignCategoryModal (willDismiss)="onWillDismiss($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Assign Category</ion-title>
+          <ion-buttons slot="start">
+            <ion-button (click)="cancel()">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+          <ion-buttons slot="end">
+            <ion-button (click)="unassignCategoryFromTask()" [strong]="true"
+              >Clear</ion-button
+            >
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-card>
+          <ion-card-content>
+            <ion-item>
+              <ion-label>Category</ion-label>
+              <ion-select
+                interface="popover"
+                [value]="selectedAssignCategory()"
+                (ionChange)="
+                changeSelectedAssignCategoryFilter($event.detail.value)
+                "
+                placeholder="Select a category"
+              >
+                @for (category of allCategories(); track category) {
+                <ion-select-option [value]="category"
+                  >{{ category }}</ion-select-option
+                >
+                } @empty {
+                <ion-select-option disabled>No categories</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            <ion-button
+              class="ion-margin-top"
+              expand="block"
+              (click)="applyAssignCategory()"
+            >
+              Assign
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>
