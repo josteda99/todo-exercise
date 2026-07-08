@@ -372,6 +372,39 @@ export const TodoTaskStore = signalStore(
         }),
       ),
     ),
+    async resetDB(): Promise<void> {
+      patchState(store, { isLoading: true });
+
+      try {
+        // delete all tasks
+        const tasksSnapshot = await firestoreApi.getDocsFn(
+          firestoreApi.collectionFn('tasks'),
+        );
+        await Promise.all(
+          tasksSnapshot.docs.map((docSnapshot: any) =>
+            firestoreApi.deleteDocFromCollection(`tasks/${docSnapshot.id}`, {}),
+          ),
+        );
+
+        // delete all categories
+        const categoriesSnapshot = await firestoreApi.getDocsFn(
+          firestoreApi.collectionFn('categories'),
+        );
+        await Promise.all(
+          categoriesSnapshot.docs.map((docSnapshot: any) =>
+            firestoreApi.deleteDocFromCollection(
+              `categories/${docSnapshot.id}`,
+              {},
+            ),
+          ),
+        );
+      } catch (error) {
+        console.error('resetDB error', error);
+        throw error;
+      } finally {
+        patchState(store, { isLoading: false });
+      }
+    },
     selectTaskToEdit(taskId: string): void {
       patchState(store, {
         selectedTaskId: taskId,

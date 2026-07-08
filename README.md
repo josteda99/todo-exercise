@@ -21,21 +21,22 @@ min requirements
 - Compile android and ios with cordoba
 
 - firebase✔️
-- feature flag remote config
+- feature flag remote config✔️
 - demo
 
 #### Cream
 
 - unit tests
-- i11n
+- i11n⌛
 - progress✔️
 - reaminig✔️
-- security
+- security (I dont have so much time but I would implement something with firebase and use JWT)
 
 ### take in account
 
-- lazy loading (by default and only 1 route)
-- large lists
+- lazy loading (by default and only 1 route)✔️
+- large lists✔️
+- onPush✔️
 - memory optimization
 
 ### To send

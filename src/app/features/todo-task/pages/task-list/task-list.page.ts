@@ -1,4 +1,11 @@
-import { Component, inject, signal, ViewChild, computed } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  ViewChild,
+  computed,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonInputCustomEvent,
@@ -45,11 +52,12 @@ import { addIcons } from 'ionicons';
 import { TodoTaskStore } from '../../store/task.store';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { OverlayEventDetail } from '@ionic/core/components';
-
+import { RemoteConfig } from '../../../../shared/services/remote-config';
 @Component({
   selector: 'app-task-list',
   templateUrl: 'task-list.page.html',
   styleUrls: ['task-list.page.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     IonModal,
     IonText,
@@ -86,6 +94,7 @@ export class TaskListPage {
 
   private readonly _store = inject(TodoTaskStore);
   private alertController = inject(AlertController);
+  private remoteConfigService = inject(RemoteConfig);
 
   public newTask = signal('');
   public newCategory = signal('');
@@ -100,6 +109,7 @@ export class TaskListPage {
   public displayedCompletedTasks = computed(() =>
     this.completedTasks().slice(0, this.completedDisplayLimit()),
   );
+  public showResetStorage = signal(false);
 
   constructor() {
     addIcons({
@@ -114,6 +124,15 @@ export class TaskListPage {
       .loadCategories()
       .pipe(takeUntilDestroyed())
       .subscribe(console.log);
+  }
+
+  async ngOnInit() {
+    await this.remoteConfigService.initialize();
+
+    const showReset =
+      await this.remoteConfigService.getBoolean('show_reset_storage');
+
+    this.showResetStorage.set(showReset);
   }
 
   private getTaskDialogButtons() {
@@ -313,8 +332,12 @@ export class TaskListPage {
     this.assignCategoryModal.dismiss();
   }
 
-  deleteCategory(e: PointerEvent, category: string) {
+  public deleteCategory(e: PointerEvent, category: string) {
     e.stopPropagation();
     this._store.deleteCategory(category);
+  }
+
+  public resetLocalStorage() {
+    this._store.resetDB();
   }
 }

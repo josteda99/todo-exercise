@@ -9,6 +9,11 @@
             total
           </ion-text>
         </ion-button>
+        @if (showResetStorage()) {
+        <ion-button (click)="resetLocalStorage()">
+          <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+        </ion-button>
+        }
       </ion-buttons>
       <ion-progress-bar
         [value]="
