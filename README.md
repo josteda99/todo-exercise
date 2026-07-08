@@ -34,6 +34,7 @@ min requirements
 - i11n
 - progress
 - reaminig
+- security
 
 ### take in account
 
