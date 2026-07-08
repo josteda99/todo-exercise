@@ -56,7 +56,6 @@ import { RemoteConfig } from '../../../../shared/services/remote-config';
 @Component({
   selector: 'app-task-list',
   templateUrl: 'task-list.page.html',
-  styleUrls: ['task-list.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     IonModal,
