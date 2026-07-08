@@ -1,0 +1,7 @@
+{
+  "name": "todo-exercise",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
