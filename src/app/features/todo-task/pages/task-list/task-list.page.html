@@ -1,7 +1,20 @@
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
+  <ion-header>
     <ion-toolbar>
       <ion-title size="large">My Tasks</ion-title>
+      <ion-buttons slot="end">
+        <ion-button fill="clear" color="medium">
+          <ion-text>
+            {{ pendingTasks().length }} remaining • {{ allTasks().length }}
+            total
+          </ion-text>
+        </ion-button>
+      </ion-buttons>
+      <ion-progress-bar
+        [value]="
+          allTasks().length ? completedTasks().length / allTasks().length : 0
+        "
+      ></ion-progress-bar>
     </ion-toolbar>
   </ion-header>
 
@@ -43,8 +56,8 @@
             outline="true"
             clickable="true"
             (click)="
-                openAssignCategoryModal(item.id); $event.stopPropagation()
-              "
+                  openAssignCategoryModal(item.id); $event.stopPropagation()
+                "
           >
             <ion-label>{{ item.category || "Assign" }}</ion-label>
           </ion-chip>

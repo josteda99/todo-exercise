@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   addDoc,
   collection,
@@ -10,42 +10,66 @@ import {
   collectionData,
 } from '@angular/fire/firestore';
 import { getDocs } from 'firebase/firestore';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FirestoreApi {
-  private firestore = inject(Firestore);
+  constructor(private readonly firestore: Firestore) {}
 
-  protected collectionFn(firestore: Firestore, path: string) {
-    return collection(firestore, path);
+  public collectionFn(path: string) {
+    return collection(this.firestore, path);
   }
 
-  protected collectionDataFn(query: any, options?: any) {
+  private collectionDataFn(query: any, options?: any) {
     return collectionData(query, options);
   }
 
-  protected addDocFn(collectionRef: any, data: any) {
+  public getCollectionData<T>(path: string, options?: any): Observable<T[]> {
+    return this.collectionDataFn(
+      this.collectionFn(path),
+      options,
+    ) as Observable<T[]>;
+  }
+
+  private addDocFn(collectionRef: any, data: any) {
     return addDoc(collectionRef, data);
   }
 
-  protected updateDocFn(docRef: any, data: any) {
+  public addDocToCollection(path: string, data: any) {
+    return this.addDocFn(this.collectionFn(path), data);
+  }
+
+  public deleteDocFromCollection(path: string, data: any) {
+    return this.deleteDocFn(this.docFn(this.firestore, path));
+  }
+
+  public updateDocFn(docRef: any, data: any) {
     return updateDoc(docRef, data);
   }
 
-  protected deleteDocFn(docRef: any) {
+  private deleteDocFn(docRef: any) {
     return deleteDoc(docRef);
   }
 
-  protected setDocFn(docRef: any, data: any) {
+  private setDocFn(docRef: any, data: any) {
     return setDoc(docRef, data);
   }
 
-  protected docFn(firestore: Firestore, path: string) {
+  public docFn(firestore: Firestore, path: string) {
     return doc(firestore, path);
   }
 
-  protected getDocsFn(query: any) {
+  public getDocsFn(query: any) {
     return getDocs(query);
+  }
+
+  public getDocFn(path: string) {
+    return this.docFn(this.firestore, path);
+  }
+
+  public updateDocFromCollection(docRef: any, data: any) {
+    return this.updateDocFn(docRef, data);
   }
 }

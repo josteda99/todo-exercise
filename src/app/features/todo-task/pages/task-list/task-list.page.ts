@@ -1,5 +1,9 @@
-import { Component, signal } from '@angular/core';
-import { IonInputCustomEvent, InputInputEventDetail } from '@ionic/core';
+import { Component, inject, signal } from '@angular/core';
+import {
+  IonInputCustomEvent,
+  InputInputEventDetail,
+  AlertInput,
+} from '@ionic/core';
 
 import {
   IonHeader,
@@ -18,15 +22,24 @@ import {
   IonCheckbox,
   IonLabel,
   IonChip,
+  IonProgressBar,
+  IonButtons,
+  IonText,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { TodoTask } from '../../interfaces/task.interface';
 import { addOutline, trashOutline } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
+import { TodoTaskStore } from '../../store/task.store';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'app-task-list',
   templateUrl: 'task-list.page.html',
   styleUrls: ['task-list.page.scss'],
   imports: [
+    IonText,
+    IonButtons,
+    IonProgressBar,
     IonChip,
     IonLabel,
     IonCheckbox,
@@ -44,42 +57,91 @@ import { addIcons } from 'ionicons';
     IonTitle,
     IonContent,
   ],
+  providers: [TodoTaskStore],
 })
 export class TaskListPage {
+  private readonly _store = inject(TodoTaskStore);
+  private alertController = inject(AlertController);
+
   public newTask = signal('');
-  public pendingTasks = signal<TodoTask[]>([
-    { id: '1', title: 'Task 1', completed: false, category: 'hello' },
-  ]);
-  public completedTasks = signal<TodoTask[]>([
-    { id: '1', title: 'Task 1', completed: true, category: 'hello' },
-  ]);
-  public allTasks = signal<TodoTask[]>([
-    { id: '1', title: 'Task 1', completed: false, category: 'hello' },
-    { id: '2', title: 'Task 2', completed: true, category: 'world' },
-  ]);
+  public pendingTasks = this._store.pendingTasks;
+  public completedTasks = this._store.completedTasks;
+  public allTasks = this._store.allTasks;
 
   constructor() {
     addIcons({ trashOutline, addOutline });
+    this._store
+      .loadTasks()
+      .pipe(takeUntilDestroyed())
+      .subscribe((a) => console.log(a));
+  }
+
+  private getTaskDialogButtons() {
+    return [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+      {
+        text: 'Edit',
+        role: 'confirm',
+        handler: (input: { taskTitle: string }) => {
+          const value = input.taskTitle;
+          if (!value) return;
+          this._store.editTask(value);
+          // this.taskService.editTask(this.tempTaskId()!, value, '');
+        },
+      },
+    ];
+  }
+
+  private getCreateTaskInputs(): AlertInput[] {
+    return [
+      {
+        name: 'taskTitle',
+        type: 'text',
+        value: this._store.selectedTask()?.title || '',
+        placeholder: 'New task',
+        attributes: {
+          maxlength: 50,
+          minlength: 1,
+        },
+      },
+    ];
   }
 
   public addTask() {
-    //todo
+    if (!this.newTask().trim()) return;
+
+    this._store.createTask(this.newTask());
+    this.newTask.set('');
   }
 
   public onNewTaskInput($event: IonInputCustomEvent<InputInputEventDetail>) {
-    //todo
+    this.newTask.set($event.detail.value || '');
   }
 
   public deleteTask(e: Event, id: string) {
-    //todo
+    e.stopPropagation();
+    this._store.deleteTask(id);
   }
 
   async editTaskDialog(task?: TodoTask) {
-    //todo
+    if (task) {
+      this._store.selectTaskToEdit(task.id);
+    }
+    const alert = await this.alertController.create({
+      header: 'Edit Task',
+      buttons: this.getTaskDialogButtons(),
+      inputs: this.getCreateTaskInputs(),
+    });
+
+    await alert.present();
   }
 
   public toggleTask(e: Event, id: string) {
-    //todo
+    e.stopPropagation();
+    this._store.toggleTaskCompletion(id);
   }
 
   public openAssignCategoryModal(taskId: string) {
