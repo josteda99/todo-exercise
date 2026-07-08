@@ -1,4 +1,4 @@
-# todo exercise
+# Todo exercise
 
 min requirements
 
